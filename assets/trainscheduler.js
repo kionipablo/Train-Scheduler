@@ -11,6 +11,8 @@ var firebaseConfig = {
   // Initialize Firebase
   firebase.initializeApp(firebaseConfig);
 
+  var database = firebase.database();
+
   //Button for adding times
   $("#add-train-btn").on("click", function(event){
       event.preventDefault();
@@ -42,4 +44,35 @@ var firebaseConfig = {
       $("#time-input").val("");
       $("#frequency-input").val("");
 
-  })
+  });
+
+  database.ref().on("child_added",function(snapshot){
+
+    var trainName = snapshot.val().train;
+    var trainDestination = snapshot.val().destination;
+    var trainTime = snapshot.val().time;
+    var trainFrequency = snapshot.val().frequency;
+
+    console.log(trainName);
+    console.log(trainDestination);
+    console.log(trainTime);
+    console.log(trainFrequency);
+
+    //To calculate the time difference between the moment the user submitted the information and the first train
+    var timeDifference = moment().diff(moment.unix(snapshot.val().time), "minutes");
+
+    var trainMinutesAway = trainFrequency - (timeDifference % trainFrequency)
+
+    var trainNextArrival = moment().add(trainMinutesAway, 'm').format('hh:mm');
+
+    var newTrainRow = $("<tr>").append(
+      $("<td>").text(trainName),
+      $("<td>").text(trainDestination),
+      $("<td>").text(trainFrequency),
+      $("<td>").text(trainNextArrival),
+      $("<td>").text(trainMinutesAway),
+    );
+
+    $("#train-table > tbody").append(newTrainRow);
+    
+  });
